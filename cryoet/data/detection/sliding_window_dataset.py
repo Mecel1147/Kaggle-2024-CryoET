@@ -7,6 +7,7 @@ from ..parsers import AnnotatedVolume
 from ...training.args import DataArguments, ModelArguments
 
 
+# 吧一个大的3D CryoET图像切成一块块固定大小的“小图像块”，并自动匹配每块中的目标位置和类别信息
 class SlidingWindowCryoETObjectDetectionDataset(CryoETObjectDetectionDataset, ObjectDetectionMixin):
 
     def __init__(
@@ -28,11 +29,15 @@ class SlidingWindowCryoETObjectDetectionDataset(CryoETObjectDetectionDataset, Ob
             model_args.valid_spatial_num_tiles,
         )
 
+        # 把一个大的(Z, Y, X)的3D CryoET图像切成nums_tiles个小窗口
+        # 每个tile的大小是window_size
+        # 返回一组(z_slice, y_slice, x_slice)
         self.tiles = list(
             compute_better_tiles_with_num_tiles(self.sample.volume_shape, window_size=self.window_size, num_tiles=self.num_tiles)
         )
         self.data_args = data_args
 
+    # 第 i 块 tile 的图像和标签怎么取
     def __getitem__(self, idx):
         tile = self.tiles[idx]  # tiles are z y x order
         centers_px = self.sample.centers_px  # x y z
@@ -79,5 +84,6 @@ class SlidingWindowCryoETObjectDetectionDataset(CryoETObjectDetectionDataset, Ob
 
         return data
 
+    # 有多少块 tile
     def __len__(self):
         return len(self.tiles)

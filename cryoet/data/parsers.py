@@ -344,14 +344,21 @@ class AnnotatedVolume:
     mode: str
     split: str
 
+# 3D图像体(x, y, z)的数据结构
     volume: np.ndarray
 
+# 3D图像体中心点的坐标(x, y, z)
     centers: np.ndarray
+# 每个目标类别
     labels: np.ndarray
+# 每个目标的大小（半径）
     radius: np.ndarray
 
+# 3D图像体中心点的坐标(x, y, z)（像素坐标）
     centers_px: np.ndarray
+# 每个目标的大小（半径）（像素坐标）
     radius_px: np.ndarray
+# 这个数据结构还支持一些操作，比如旋转(flip())、翻转(rot90)等
 
     @property
     def volume_shape(self) -> Tuple[int, int, int]:
@@ -416,6 +423,8 @@ class AnnotatedVolume:
         )
 
 
+# 把CryoET原始数据都取出来，打包成一个好用的对象AnnotatedVolume
+# 用于后续的数据增强
 def read_annotated_volume(root, study, mode, use_6_classes: bool, normalization: str, split="train"):
     volume_data, object_centers, object_labels, object_radii = get_volume_and_objects(
         root_dir=root,

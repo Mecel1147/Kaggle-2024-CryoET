@@ -56,6 +56,7 @@ class ObjectDetectionDataModule(L.LightningDataModule):
         self.train_solution = None
         self.valid_studies = None
 
+# 
     @classmethod
     def build_dataset_from_samples(
         cls,
@@ -90,6 +91,7 @@ class ObjectDetectionDataModule(L.LightningDataModule):
                                 print("Flipping", x_flip, y_flip, z_flip)
                                 maybe_flipped_sample = sample.rot90(rot).flip(x_flip, y_flip, z_flip)
 
+                                # 在整个3D图像上以固定窗口大小滑动，提取出多个小patch，每个patch自动判断内部包含哪些目标
                                 sliding_dataset = SlidingWindowCryoETObjectDetectionDataset(
                                     sample=maybe_flipped_sample,
                                     data_args=data_args,
@@ -136,6 +138,7 @@ class ObjectDetectionDataModule(L.LightningDataModule):
         train_samples = []
         for train_study in self.train_studies:
             for mode in self.train_modes:
+                # 读取3D数据以及标签
                 sample = read_annotated_volume(
                     root=self.root,
                     study=train_study,
@@ -149,6 +152,7 @@ class ObjectDetectionDataModule(L.LightningDataModule):
         valid_samples = []
         for study_name in self.valid_studies_original:
             for mode in self.valid_modes:
+                # 读取3D数据以及标签
                 sample = read_annotated_volume(
                     root=self.root,
                     study=study_name,
@@ -159,6 +163,7 @@ class ObjectDetectionDataModule(L.LightningDataModule):
                 )
                 valid_samples.append(sample)
 
+        # 创建数据集
         self.train, self.train_solution = self.build_dataset_from_samples(
             train_samples,
             use_sliding_crops=self.data_args.use_sliding_crops,

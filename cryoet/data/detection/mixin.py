@@ -2,6 +2,7 @@ import torch
 
 
 class ObjectDetectionMixin:
+# 将输入的各种参数转换为一个字典，以便在后续的处理过程中使用。
     def convert_to_dict(
         self,
         volume,

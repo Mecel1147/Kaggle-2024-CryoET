@@ -25,6 +25,7 @@ def quality_focal_loss(logits, labels, num_items_in_batch=None, alpha=4, **kwarg
     return loss.div_(num_items_in_batch)
 
 
+# 训练heatmap的默认损失函数
 def point_detection_loss(logits, labels, num_items_in_batch=None, alpha=2, beta=4, eps=1e-6, **kwargs):
     """
     Compute centernet loss for object detection
@@ -33,15 +34,23 @@ def point_detection_loss(logits, labels, num_items_in_batch=None, alpha=2, beta=
     :param labels: Target heatmap BxCxDxHxW
     :return: Single scalar loss
     """
+    # 计算mask
     pos_mask = labels.eq(1)
     neg_mask = ~pos_mask
 
+    # 把logits转换成概率，clamp用于限制logits的范围，避免log(0)的情况
     pt = logits.sigmoid().clamp(eps, 1 - eps)
 
+    # pos_loss = - (1 - pt)^α * log(sigmoid(logits)) * pos_mask
+    # alpha=2.0，表示对难点更关注
     pos_loss: Tensor = -torch.pow(1 - pt, alpha) * F.logsigmoid(logits) * pos_mask
+    # neg_loss = - (1 - label)^β * pt^α * log(1 - sigmoid(logits)) * neg_mask
+    # 让模型在背景区域保持低输出值
     neg_loss: Tensor = -torch.pow(1.0 - labels, beta) * torch.pow(pt, alpha) * F.logsigmoid(-logits) * neg_mask
 
     loss = (neg_loss + pos_loss).sum()
+    
+    # 防止➗0
     if num_items_in_batch is None:
         num_items_in_batch = pos_mask.sum().item()
 
